@@ -75,9 +75,11 @@ var App = React.createClass({
 	},
 
 	updateDestination: function(destination){
+		// not called when ship is moving... race-condition
+		// works when you extend the update time to 1000 instead
+		// of 10
 		console.log(destination);
 		var ship = this.state.ship;
-		//ship.destination = destination;
 		if(ship.destination){
 			ship.destinations.push(destination);	
 		} else {
@@ -102,24 +104,24 @@ var App = React.createClass({
 		var ship = this.state.ship;
 		var reachedDestination = nav.destinationReached(ship);
 
-		if(reachedDestination && ship.destinations.length == 0){
-			this.clearIntervals();
-			return;
-		}
-
-		if(!reachedDestination){
+		if (reachedDestination) {
+			// we reach the current destination
+			if(ship.destinations.length === 0){
+				// there are no more destinations
+				this.clearIntervals();
+			} else {
+				// there are more destinations to get to
+				var nextDest = ship.destinations.shift();
+				ship.destination = nextDest;
+				this.setState({ship:ship});
+			}
+		} else {
+			// not yet reached the current position
 			var nextPos = nav.nextPositionToDestination(ship);
 			ship.position = nextPos;
 			this.setState({ship: ship});
-			return;
 		}
-
-		var nextDest = ship.destinations.shift();
-		ship.destination = nextDest;
-		this.setState({ship:ship});
-
 	}
-
 });
 
 module.exports = App;
